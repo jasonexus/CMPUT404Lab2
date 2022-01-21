@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
 import socket
+from multiprocessing import Process
 import sys
 
 #define address & buffer size
 HOST = ""
 PORT = 8001
 BUFFER_SIZE = 1024
-
-# 
 
 def get_remote_ip(host):
     print(f'Getting IP for {host}')
@@ -41,17 +40,25 @@ def main():
 
                 proxy_end.connect((remote_ip, port))
 
-                send_full_data = conn.recv(BUFFER_SIZE)
-                print(f"Sending received data {send_full_data} to Google")
-                proxy_end.sendall(send_full_data)
+                p = Process(target = handle_proxy, args=(proxy_end, conn))
+                p.daemon = True
+                p.start
+                print("Starting process...", p)
 
-                proxy_end.shutdown(socket.SHUT_WR)
 
-                data1 = proxy_end.recv(BUFFER_SIZE)
-                print(f"Sending the received data {data1} back to the client")
-                conn.send(data1)
 
-            conn.close()
+
+def handle_proxy(proxy_end, conn):
+    send_full_data = conn.recv(BUFFER_SIZE)
+    print(f"Sending received data {send_full_data} to Google")
+    proxy_end.sendall(send_full_data)
+
+    proxy_end.shutdown(socket.SHUT_WR)
+
+    data1 = proxy_end.recv(BUFFER_SIZE)
+    print(f"Sending the received data {data1} back to the client")
+    conn.send(data1)
+    conn.close()
 
 if __name__ == "__main__":
     main()

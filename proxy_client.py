@@ -27,5 +27,5 @@ def connect(addr):
 def main():
     connect(('127.0.0.1', 8001))
 
-if __name__ == "main":
+if __name__ == "__main__":
     main()
